@@ -2802,6 +2802,11 @@ const zoomSlider = document.getElementById('cropper-zoom');
         errorEl.textContent = 'Username cannot be blank.';
         return;
       }
+      const usernameRegex = /^[a-zA-Z0-9_-]{3,20}$/;
+      if (!usernameRegex.test(newName)) {
+        errorEl.textContent = 'Username must be 3-20 characters long and contain only letters, numbers, underscores, or hyphens.';
+        return;
+      }
 
       const saveBtn = document.getElementById('btn-save-profile-modal');
       const originalHTML = saveBtn.innerHTML;

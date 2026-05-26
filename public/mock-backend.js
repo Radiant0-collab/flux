@@ -9,91 +9,25 @@
 
   console.log("Flux: Running in GitHub Pages static mode. Intercepting API requests via virtual backend.");
 
+  // Clean up any old AI posts/profiles from previous sessions
+  try {
+    let oldSetups = JSON.parse(localStorage.getItem('flux_setups') || '[]');
+    if (oldSetups.some(s => s.id && s.id.startsWith('mock_'))) {
+      localStorage.removeItem('flux_setups');
+      localStorage.removeItem('flux_profiles');
+    }
+  } catch (e) {
+    console.error(e);
+  }
+
   // Seed setups database in localStorage if not present
   if (!localStorage.getItem('flux_setups')) {
-    localStorage.setItem('flux_setups', JSON.stringify([
-      {
-        id: "mock_post_1",
-        title: "Cozy Coding Corner",
-        username: "CosmicArchitect_784",
-        description: "My setup for building web apps and coding late at night. Features a split mechanical keyboard and dual curved monitors.",
-        category: "Productivity",
-        image_url: "https://images.unsplash.com/photo-1547082299-de196ea013d6?w=800&auto=format&fit=crop&q=60",
-        likes: 12,
-        created_at: new Date(Date.now() - 3600000 * 24).toISOString(), // 1 day ago
-        comments: [
-          {
-            id: "comment_1",
-            username: "CodeExplorer",
-            text: "This looks super clean! What split keyboard is that?",
-            created_at: new Date(Date.now() - 3600000 * 20).toISOString(),
-            replies: [
-              {
-                id: "reply_1",
-                username: "CosmicArchitect_784",
-                text: "Thanks! It is an Ergodox EZ with Cherry MX Brown switches.",
-                created_at: new Date(Date.now() - 3600000 * 18).toISOString()
-              }
-            ]
-          }
-        ],
-        private: false,
-        liked_by: ["CodeExplorer"]
-      },
-      {
-        id: "mock_post_2",
-        title: "Neon Gaming Station",
-        username: "NeonKnight",
-        description: "Vibrant RGB themed gaming setup. Liquid cooled with a customized desk mat.",
-        category: "Gaming",
-        image_url: "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800&auto=format&fit=crop&q=60",
-        likes: 28,
-        created_at: new Date(Date.now() - 3600000 * 12).toISOString(),
-        comments: [],
-        private: false,
-        liked_by: []
-      },
-      {
-        id: "mock_post_3",
-        title: "Nordic Minimal Wood Desk",
-        username: "NordicLines",
-        description: "Minimalist workspace with solid oak desk, light gray felt pad, and single clean monitor arm.",
-        category: "Minimal",
-        image_url: "https://images.unsplash.com/photo-1513151233558-d860c5398176?w=800&auto=format&fit=crop&q=60",
-        likes: 45,
-        created_at: new Date(Date.now() - 3600000 * 48).toISOString(),
-        comments: [],
-        private: false,
-        liked_by: []
-      }
-    ]));
+    localStorage.setItem('flux_setups', JSON.stringify([]));
   }
 
   // Seed profiles database in localStorage if not present
   if (!localStorage.getItem('flux_profiles')) {
-    localStorage.setItem('flux_profiles', JSON.stringify({
-      "cosmicarchitect_784": {
-        bio: "Designing clean layout flows and premium creative spaces.",
-        twitter: "cosmic_arch",
-        instagram: "cosmic.arch",
-        github: "CosmicArchitect",
-        avatar_url: ""
-      },
-      "neonknight": {
-        bio: "Hardcore gamer and RGB enthusiast. Liquid cooling is life.",
-        twitter: "neonknight_gaming",
-        instagram: "neonknight.gg",
-        github: "",
-        avatar_url: "https://images.unsplash.com/photo-1566492031773-4f4e44671857?w=150&auto=format&fit=crop&q=60"
-      },
-      "nordiclines": {
-        bio: "Architect & minimalist designer based in Copenhagen.",
-        twitter: "",
-        instagram: "nordic.lines",
-        github: "nordiclines",
-        avatar_url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=60"
-      }
-    }));
+    localStorage.setItem('flux_profiles', JSON.stringify({}));
   }
 
   // Intercept window.fetch
@@ -566,8 +500,29 @@
       
       const oldNameNormalized = oldUsername.trim().toLowerCase();
       const newNameClean = newUsername.trim();
+      const newNameNormalized = newNameClean.toLowerCase();
+
+      // Validate format
+      const usernameRegex = /^[a-zA-Z0-9_-]{3,20}$/;
+      if (!usernameRegex.test(newNameClean)) {
+        const err = new Error("Username must be 3-20 characters long and contain only letters, numbers, underscores, or hyphens.");
+        err.status = 400;
+        throw err;
+      }
 
       const setups = getSetups();
+
+      // Validate uniqueness if username is actually changing (ignoring case)
+      if (oldNameNormalized !== newNameNormalized) {
+        const profiles = getProfiles();
+        const isProfileTaken = !!profiles[newNameNormalized];
+        const isSetupTaken = setups.some(s => s.username.toLowerCase() === newNameNormalized);
+        if (isProfileTaken || isSetupTaken) {
+          const err = new Error("Username is already taken.");
+          err.status = 400;
+          throw err;
+        }
+      }
       setups.forEach(setup => {
         if (setup.username.toLowerCase() === oldNameNormalized) {
           setup.username = newNameClean;

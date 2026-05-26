@@ -21,85 +21,7 @@ const dbPath = path.join(dataDir, 'setups.json');
 const profilesPath = path.join(dataDir, 'profiles.json');
 
 // Initialize database with sample setups if empty/missing
-const sampleSetups = [
-  {
-    id: "sample-1",
-    title: "Cyberpunk Battlestation 2077",
-    username: "NeonGamer",
-    description: "My custom built liquid-cooled gaming desk. Added custom neon purple backlighting, mechanical keyboard with lavender switches, and a 49-inch ultrawide monitor for deep immersion. Great for late-night gaming sessions.",
-    category: "Gaming",
-    image_url: "https://images.unsplash.com/photo-1603481588273-2f908a9a7a1b?auto=format&fit=crop&w=1200&q=80",
-    likes: 42,
-    created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago
-    comments: [
-      {
-        id: "c1",
-        username: "KeycapCollector",
-        text: "The neon purple looks incredible! What switches are you running?",
-        created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-        replies: [
-          {
-            id: "c2",
-            username: "NeonGamer",
-            text: "@KeycapCollector Thanks! Running Kailh Box V2 Lavender Tactiles. Super smooth.",
-            created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000 + 30 * 60 * 1000).toISOString()
-          }
-        ]
-      }
-    ]
-  },
-  {
-    id: "sample-2",
-    title: "Minimalist Oak & Warm Lights",
-    username: "NordicDesign",
-    description: "An oak wood desk setup focusing on simplicity and functionality. Wireless mouse, custom keychron keyboard, a single monitor arm, and warm lighting to reduce eye strain. Zero cable visibility.",
-    category: "Minimal",
-    image_url: "https://images.unsplash.com/photo-1585776245991-cf89dd7fc73a?auto=format&fit=crop&w=1200&q=80",
-    likes: 89,
-    created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days ago
-    comments: [
-      {
-        id: "c3",
-        username: "CleanDeskClub",
-        text: "This is peak minimalism. The wood tone is gorgeous.",
-        created_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString()
-      }
-    ]
-  },
-  {
-    id: "sample-3",
-    title: "The Ultimate Coding Sanctuary",
-    username: "CodeNinja",
-    description: "Optimized for maximum IDE real estate. Running vertical dual monitors, custom Ergodox split keyboard, ergonomic office chair, and a desk shelf to hold utility items. Clean, productive, and focused.",
-    category: "Coding",
-    image_url: "https://images.unsplash.com/photo-1607799279861-4dd421887fb3?auto=format&fit=crop&w=1200&q=80",
-    likes: 64,
-    created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
-    comments: []
-  },
-  {
-    id: "sample-4",
-    title: "Triple Screen Productivity Hub",
-    username: "SoloFounder",
-    description: "A productivity powerhouse. Built on a motorized sit-stand desk. Powering three 4K monitors from a MacBook Pro. Equipped with a high-fidelity microphone for webinars and podcasts.",
-    category: "Productivity",
-    image_url: "https://images.unsplash.com/photo-1547082299-de196ea013d6?auto=format&fit=crop&w=1200&q=80",
-    likes: 27,
-    created_at: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(), // 8 days ago
-    comments: []
-  },
-  {
-    id: "sample-5",
-    title: "Clean Student Workspace",
-    username: "StudyHarder",
-    description: "Budget-friendly student desk setup in a small dorm room. Includes custom pegboard for organizing cables and headphones, iPad for note-taking, and warm desk mat. Proof that you don't need a huge budget for a clean look.",
-    category: "Student",
-    image_url: "https://images.unsplash.com/photo-1618477388954-7852f32655ec?auto=format&fit=crop&w=1200&q=80",
-    likes: 15,
-    created_at: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(), // 12 hours ago
-    comments: []
-  }
-];
+const sampleSetups = [];
 
 function getMockLikesList(setupId, baseCount) {
   const mockNames = ['NordicDesign', 'CodeNinja', 'SoloFounder', 'StudyHarder', 'RGBVibe', 'MechKeyboard', 'CableManager', 'BattlestationKing', 'NeonLight', 'PixelArtist', 'ErgoNerd', 'GamerPro', 'DeskSetupClub', 'MinimalistDev', 'LaptopGamer', 'WoodDeskFan', 'TripleMonitor', 'ErgonomicFan', 'CustomKeyboard', 'KeycapEnthusiast', 'WorkspaceGoal', 'CleanSetup', 'GameStation', 'CreativeDev', 'CodersLife', 'TechReviewer', 'SetupInspiration', 'CozyAttic', 'AtticVibe', 'DesignEnthusiast', 'MacBookProUser', 'LinearSwitch', 'TactileLover', 'RGBQueen', 'DeskFlexer', 'BattlestationShowcase', 'GamingRoom', 'DeveloperWorkspace', 'CozyNook', 'NeonLegend', 'NordicStyle', 'ErgonomicDream'];
@@ -694,8 +616,25 @@ app.post('/api/profile/update', (req, res) => {
 
   const oldNameNormalized = oldUsername.trim().toLowerCase();
   const newNameClean = newUsername.trim();
+  const newNameNormalized = newNameClean.toLowerCase();
+
+  // Validate format
+  const usernameRegex = /^[a-zA-Z0-9_-]{3,20}$/;
+  if (!usernameRegex.test(newNameClean)) {
+    return res.status(400).json({ error: 'Username must be 3-20 characters long and contain only letters, numbers, underscores, or hyphens.' });
+  }
 
   const setups = readDB();
+
+  // Validate uniqueness if username is actually changing (ignoring case)
+  if (oldNameNormalized !== newNameNormalized) {
+    const profiles = readProfiles();
+    const isProfileTaken = !!profiles[newNameNormalized];
+    const isSetupTaken = setups.some(s => s.username.toLowerCase() === newNameNormalized);
+    if (isProfileTaken || isSetupTaken) {
+      return res.status(400).json({ error: 'Username is already taken.' });
+    }
+  }
   let updatedCount = 0;
 
   setups.forEach(setup => {
