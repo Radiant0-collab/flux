@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flux | Share & Discover What Inspires You</title>
+  <meta name="description" content="Share your creative world, rate designs, projects, photography, setups, and climb the leaderboard on Flux.">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700;800&family=Pacifico&family=Satisfy&family=Grand+Hotel&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons for a premium look -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Premium Glass Navbar -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-container">
+      <a href="#/" class="logo-link" id="nav-logo">
+        <div class="logo">
+          <span class="logo-icon-pinterest">F</span>
+          <span class="logo-text-instagram">Flux</span>
+        </div>
+      </a>
+      
+      <!-- Search Bar -->
+      <div class="nav-search-wrapper" id="nav-search-wrapper">
+        <div class="search-input-container">
+          <i class="fa-solid fa-magnifying-glass search-icon"></i>
+          <input type="text" id="nav-search-input" placeholder="Search usernames..." autocomplete="off">
+          <button type="button" id="btn-clear-search" class="clear-search-btn hidden"><i class="fa-solid fa-circle-xmark"></i></button>
+        </div>
+        <!-- Search Results Dropdown -->
+        <div class="search-results-dropdown hidden" id="search-results-dropdown"></div>
+      </div>
+      
+      <div class="nav-actions">
+        <a href="#/profile" class="nav-btn secondary-btn" id="btn-nav-profile">
+          <i class="fa-solid fa-user-astronaut"></i>
+          <span id="nav-profile-name">Profile</span>
+        </a>
+        <a href="#/upload" class="nav-btn primary-btn" id="btn-nav-upload">
+          <i class="fa-solid fa-plus"></i>
+          <span>Upload Post</span>
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content Wrapper -->
+  <main class="main-content">
+    
+    <!-- ==============================================
+         HOME / FEED PAGE
+         ============================================== -->
+    <section id="feed-page" class="page-view active">
+      <!-- Hero Section -->
+      <div class="hero-section">
+        <div class="hero-content">
+          <span class="hero-badge"><i class="fa-solid fa-fire"></i> Discover & Rate Anything</span>
+          <h1 class="hero-title">Share Your <span class="gradient-text">Creative World</span></h1>
+          <p class="hero-subtitle">Explore workspaces, custom mods, design concepts, setups, photography, and creative ideas. Like the posts that inspire you.</p>
+          <div class="hero-buttons">
+            <a href="#/upload" class="cta-btn primary-btn"><i class="fa-solid fa-cloud-arrow-up"></i> Share Your Creation</a>
+          </div>
+        </div>
+        <div class="hero-glow"></div>
+      </div>
+
+      <!-- Controls & Filter Bar -->
+      <div class="controls-bar">
+        <!-- Category Filters -->
+        <div class="categories-filter" id="categories-container">
+          <button class="filter-chip active" data-category="All">All Creations</button>
+          <button class="filter-chip" data-category="Gaming"><i class="fa-solid fa-gamepad"></i> Gaming</button>
+          <button class="filter-chip" data-category="Minimal"><i class="fa-solid fa-leaf"></i> Minimal</button>
+          <button class="filter-chip" data-category="Productivity"><i class="fa-solid fa-briefcase"></i> Productivity</button>
+          <button class="filter-chip" data-category="Budget"><i class="fa-solid fa-wallet"></i> Budget</button>
+          <button class="filter-chip" data-category="Luxury"><i class="fa-solid fa-gem"></i> Luxury</button>
+          <button class="filter-chip" data-category="Student"><i class="fa-solid fa-graduation-cap"></i> Student</button>
+          <button class="filter-chip" data-category="Coding"><i class="fa-solid fa-code"></i> Coding</button>
+          <button class="filter-chip" data-category="Other"><i class="fa-solid fa-ellipsis"></i> Other</button>
+        </div>
+
+        <!-- Sort Selectors & Layout Switcher -->
+        <div class="sort-layout-wrapper" style="display: flex; align-items: center; gap: 16px;">
+          <div class="sort-selector">
+            <label for="feed-sort" class="sort-label"><i class="fa-solid fa-sort"></i> Sort By</label>
+            <select id="feed-sort" class="sort-dropdown">
+              <option value="newest">Newest Uploads</option>
+              <option value="likes">Most Liked</option>
+            </select>
+          </div>
+          <div class="layout-switcher-group" id="layout-switcher-group">
+            <button type="button" class="layout-switch-btn active" id="btn-switch-feed" title="Feed Stream View">
+              <i class="fa-solid fa-square-rss"></i>
+            </button>
+            <button type="button" class="layout-switch-btn" id="btn-switch-grid" title="Discovery Grid View">
+              <i class="fa-solid fa-table-cells"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Setup Cards Grid -->
+      <div class="setup-grid" id="setup-cards-grid">
+        <!-- Setup cards will be dynamically loaded here -->
+        <div class="loading-spinner-container">
+          <div class="loading-spinner"></div>
+          <p>Loading setups...</p>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div id="feed-empty-state" class="empty-state hidden">
+        <div class="empty-state-icon"><i class="fa-regular fa-folder-open"></i></div>
+        <h3>No setups found</h3>
+        <p>No setups matches this filter yet. Be the first to upload one!</p>
+        <a href="#/upload" class="primary-btn"><i class="fa-solid fa-plus"></i> Upload a Creation</a>
+      </div>
+    </section>
+
+    <!-- ==============================================
+         UPLOAD PAGE
+         ============================================== -->
+    <section id="upload-page" class="page-view hidden">
+      <div class="form-container">
+        <div class="form-header">
+          <a href="#/" class="back-link"><i class="fa-solid fa-arrow-left"></i> Back to Feed</a>
+          <h2 class="section-title">Upload Your <span class="gradient-text">Creation</span></h2>
+          <p class="section-subtitle">Share your creations or setups with the community. Max image size is 10 MB. Supported formats: JPG, PNG, WEBP.</p>
+        </div>
+
+        <form id="setup-upload-form" class="upload-form" novalidate>
+          <div class="form-grid">
+            
+            <!-- Left Side: File Upload and Preview -->
+            <div class="form-left-col">
+              <div class="file-upload-zone" id="file-dropzone">
+                <input type="file" id="setup-image-input" accept="image/jpeg, image/png, image/webp" class="file-input">
+                
+                <div class="upload-zone-prompt" id="upload-prompt">
+                  <div class="upload-icon-wrapper">
+                    <i class="fa-solid fa-cloud-arrow-up upload-icon"></i>
+                    <div class="upload-icon-pulse"></div>
+                  </div>
+                  <h4>Drag and drop your image</h4>
+                  <p>or click to browse files</p>
+                  <span class="file-rules">JPG, PNG or WEBP up to 10 MB</span>
+                </div>
+
+                <div class="upload-preview-container hidden" id="upload-preview-container">
+                  <div class="upload-cropper-canvas-wrapper" style="position: relative; width: 100%; display: flex; justify-content: center; overflow: hidden; background: #000; border-radius: var(--radius-md);">
+                    <canvas id="setup-upload-canvas" width="480" height="360" style="background:#000; cursor:move; max-width:100%; display:block;"></canvas>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Cropper controls live OUTSIDE the dropzone so they're never clipped -->
+              <div class="upload-tools-bar hidden" id="upload-tools-bar">
+                <div class="upload-cropper-controls">
+                  <span class="cropper-icon"><i class="fa-solid fa-magnifying-glass-minus"></i></span>
+                  <input type="range" id="setup-upload-zoom" min="1" max="4" step="0.02" class="cropper-slider">
+                  <span class="cropper-icon"><i class="fa-solid fa-magnifying-glass-plus"></i></span>
+                </div>
+                <div class="aspect-ratio-selector">
+                  <button type="button" class="aspect-chip active" data-ratio="original">Original</button>
+                  <button type="button" class="aspect-chip" data-ratio="1:1">Square 1:1</button>
+                  <button type="button" class="aspect-chip" data-ratio="16:9">Landscape 16:9</button>
+                  <button type="button" class="aspect-chip" data-ratio="4:5">Portrait 4:5</button>
+                </div>
+                <button type="button" class="remove-preview-btn" id="btn-remove-preview">
+                  <i class="fa-solid fa-xmark"></i> Change Image
+                </button>
+              </div>
+              <div class="validation-error" id="error-image"></div>
+            </div>
+
+            <!-- Right Side: Details Form -->
+            <div class="form-right-col">
+              <!-- Setup Title -->
+              <div class="form-group">
+                <label for="setup-title" class="form-label">Post Title <span class="required">*</span></label>
+                <input type="text" id="setup-title" class="form-control" placeholder="e.g., My New Artwork or Creative Desk" maxlength="50" required>
+                <div class="validation-error" id="error-title"></div>
+              </div>
+
+              <!-- Category -->
+              <div class="form-group">
+                <label for="setup-category" class="form-label">Category <span class="required">*</span></label>
+                <select id="setup-category" class="form-control" required>
+                  <option value="" disabled selected>Select category...</option>
+                  <option value="Gaming">Gaming</option>
+                  <option value="Minimal">Minimal</option>
+                  <option value="Productivity">Productivity</option>
+                  <option value="Budget">Budget</option>
+                  <option value="Luxury">Luxury</option>
+                  <option value="Student">Student</option>
+                  <option value="Coding">Coding</option>
+                  <option value="Other">Other</option>
+                </select>
+                <div class="validation-error" id="error-category"></div>
+              </div>
+
+              <!-- Visibility -->
+              <div class="form-group">
+                <label for="setup-visibility" class="form-label">Visibility</label>
+                <select id="setup-visibility" class="form-control">
+                  <option value="public" selected>Public (Visible to everyone)</option>
+                  <option value="private">Private (Only visible on your profile)</option>
+                </select>
+              </div>
+
+              <!-- Description -->
+              <div class="form-group">
+                <label for="setup-description" class="form-label">Short Description (Optional)</label>
+                <textarea id="setup-description" class="form-control textarea" placeholder="Tell us about your creation, specifications, concept, details, or specs..." maxlength="300"></textarea>
+                <div class="char-counter"><span id="char-count">0</span> / 300</div>
+              </div>
+
+              <!-- General form error -->
+              <div class="validation-error" id="error-general"></div>
+
+              <!-- Action Buttons -->
+              <div class="upload-action-buttons">
+                <a href="#/" class="cancel-btn secondary-btn" id="btn-cancel-upload">
+                  <i class="fa-solid fa-xmark"></i> Cancel
+                </a>
+                <button type="submit" class="submit-btn primary-btn" id="btn-submit-upload">
+                  <i class="fa-solid fa-paper-plane"></i> Submit Post
+                </button>
+              </div>
+            </div>
+            
+          </div>
+        </form>
+      </div>
+    </section>
+
+
+
+    <!-- ==============================================
+         PROFILE PAGE
+         ============================================= -->
+    <section id="profile-page" class="page-view hidden">
+      <div class="profile-container" id="profile-container">
+        <!-- Rendered dynamically in app.js -->
+        <div class="loading-spinner-container">
+          <div class="loading-spinner"></div>
+          <p>Loading profile...</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==============================================
+         SETUP DETAIL PAGE
+         ============================================== -->
+    <section id="detail-page" class="page-view hidden">
+      <div class="detail-container" id="detail-container">
+        <!-- Rendered dynamically in app.js -->
+        <div class="loading-spinner-container">
+          <div class="loading-spinner"></div>
+          <p>Loading details...</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Premium Edit Modal Overlay -->
+  <div id="edit-modal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modal-title">Edit Details</h3>
+        <button class="modal-close-btn" id="btn-close-modal" title="Close"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body" id="modal-body-content">
+        <!-- Forms dynamically injected here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Premium Notification Toast -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Javascript -->
+  <script src="app.js"></script>
+</body>
+</html>
