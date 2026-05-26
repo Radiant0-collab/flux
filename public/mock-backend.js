@@ -314,6 +314,148 @@
       return setups[idx];
     }
 
+    // POST /api/setups/:id/comments/:commentId/edit
+    const commentEditMatch = pathname.match(/\/api\/setups\/([a-zA-Z0-9_-]+)\/comments\/([a-zA-Z0-9_-]+)\/edit$/);
+    if (commentEditMatch && method === 'POST') {
+      const setupId = commentEditMatch[1];
+      const commentId = commentEditMatch[2];
+      const body = JSON.parse(options.body || '{}');
+      const setups = getSetups();
+      const idx = setups.findIndex(s => s.id === setupId);
+      if (idx === -1) {
+        const err = new Error("Setup not found.");
+        err.status = 404;
+        throw err;
+      }
+      const comment = setups[idx].comments.find(c => c.id === commentId);
+      if (!comment) {
+        const err = new Error("Comment not found.");
+        err.status = 404;
+        throw err;
+      }
+      if (comment.username.toLowerCase() !== body.username.trim().toLowerCase()) {
+        const err = new Error("You are not authorized to edit this comment.");
+        err.status = 403;
+        throw err;
+      }
+      comment.text = body.text.trim();
+      saveSetups(setups);
+      return comment;
+    }
+
+    // POST /api/setups/:id/comments/:commentId/replies/:replyId/edit
+    const replyEditMatch = pathname.match(/\/api\/setups\/([a-zA-Z0-9_-]+)\/comments\/([a-zA-Z0-9_-]+)\/replies\/([a-zA-Z0-9_-]+)\/edit$/);
+    if (replyEditMatch && method === 'POST') {
+      const setupId = replyEditMatch[1];
+      const commentId = replyEditMatch[2];
+      const replyId = replyEditMatch[3];
+      const body = JSON.parse(options.body || '{}');
+      const setups = getSetups();
+      const idx = setups.findIndex(s => s.id === setupId);
+      if (idx === -1) {
+        const err = new Error("Setup not found.");
+        err.status = 404;
+        throw err;
+      }
+      const comment = setups[idx].comments.find(c => c.id === commentId);
+      if (!comment) {
+        const err = new Error("Comment not found.");
+        err.status = 404;
+        throw err;
+      }
+      const reply = comment.replies ? comment.replies.find(r => r.id === replyId) : null;
+      if (!reply) {
+        const err = new Error("Reply not found.");
+        err.status = 404;
+        throw err;
+      }
+      if (reply.username.toLowerCase() !== body.username.trim().toLowerCase()) {
+        const err = new Error("You are not authorized to edit this reply.");
+        err.status = 403;
+        throw err;
+      }
+      reply.text = body.text.trim();
+      saveSetups(setups);
+      return reply;
+    }
+
+    // POST /api/setups/:id/comments/:commentId/delete
+    const commentDeleteMatch = pathname.match(/\/api\/setups\/([a-zA-Z0-9_-]+)\/comments\/([a-zA-Z0-9_-]+)\/delete$/);
+    if (commentDeleteMatch && method === 'POST') {
+      const setupId = commentDeleteMatch[1];
+      const commentId = commentDeleteMatch[2];
+      const body = JSON.parse(options.body || '{}');
+      const setups = getSetups();
+      const idx = setups.findIndex(s => s.id === setupId);
+      if (idx === -1) {
+        const err = new Error("Setup not found.");
+        err.status = 404;
+        throw err;
+      }
+      const commentIndex = setups[idx].comments.findIndex(c => c.id === commentId);
+      if (commentIndex === -1) {
+        const err = new Error("Comment not found.");
+        err.status = 404;
+        throw err;
+      }
+      const comment = setups[idx].comments[commentIndex];
+      const setupHost = setups[idx].username;
+      const normUser = body.username.trim().toLowerCase();
+      const isAuthor = comment.username.toLowerCase() === normUser;
+      const isHost = setupHost.toLowerCase() === normUser;
+      if (!isAuthor && !isHost) {
+        const err = new Error("You are not authorized to delete this comment.");
+        err.status = 403;
+        throw err;
+      }
+      setups[idx].comments.splice(commentIndex, 1);
+      saveSetups(setups);
+      return { success: true };
+    }
+
+    // POST /api/setups/:id/comments/:commentId/replies/:replyId/delete
+    const replyDeleteMatch = pathname.match(/\/api\/setups\/([a-zA-Z0-9_-]+)\/comments\/([a-zA-Z0-9_-]+)\/replies\/([a-zA-Z0-9_-]+)\/delete$/);
+    if (replyDeleteMatch && method === 'POST') {
+      const setupId = replyDeleteMatch[1];
+      const commentId = replyDeleteMatch[2];
+      const replyId = replyDeleteMatch[3];
+      const body = JSON.parse(options.body || '{}');
+      const setups = getSetups();
+      const idx = setups.findIndex(s => s.id === setupId);
+      if (idx === -1) {
+        const err = new Error("Setup not found.");
+        err.status = 404;
+        throw err;
+      }
+      const comment = setups[idx].comments.find(c => c.id === commentId);
+      if (!comment) {
+        const err = new Error("Comment not found.");
+        err.status = 404;
+        throw err;
+      }
+      const replyIndex = comment.replies ? comment.replies.findIndex(r => r.id === replyId) : -1;
+      if (replyIndex === -1) {
+        const err = new Error("Reply not found.");
+        err.status = 404;
+        throw err;
+      }
+      const reply = comment.replies[replyIndex];
+      const setupHost = setups[idx].username;
+      const parentCommentAuthor = comment.username;
+      const normUser = body.username.trim().toLowerCase();
+      const isAuthor = reply.username.toLowerCase() === normUser;
+      const isParentAuthor = parentCommentAuthor.toLowerCase() === normUser;
+      const isHost = setupHost.toLowerCase() === normUser;
+      if (!isAuthor && !isParentAuthor && !isHost) {
+        const err = new Error("You are not authorized to delete this reply.");
+        err.status = 403;
+        throw err;
+      }
+      comment.replies.splice(replyIndex, 1);
+      saveSetups(setups);
+      return { success: true };
+    }
+
     // POST /api/setups/:id/like or unlike
     const likeMatch = pathname.match(/\/api\/setups\/([a-zA-Z0-9_-]+)\/(like|unlike)$/);
     if (likeMatch && method === 'POST') {
