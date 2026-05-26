@@ -271,9 +271,9 @@ document.addEventListener('DOMContentLoaded', () => {
           ? `<img src="${userProfile.avatar_url}" alt="${setup.username}">`
           : `${setup.username.slice(0, 2).toUpperCase()}`;
 
-        // Get comments preview (2 most recent)
+        // Get comments preview (3 most recent)
         const commentsCount = getTotalCommentsCount(setup);
-        const recentComments = setup.comments ? [...setup.comments].sort((a,b) => new Date(a.created_at) - new Date(b.created_at)).slice(-2) : [];
+        const recentComments = setup.comments ? [...setup.comments].sort((a,b) => new Date(a.created_at) - new Date(b.created_at)).slice(-3) : [];
         const commentsPreviewHTML = recentComments.map(c => `
           <div class="inline-comment-item">
             <span class="inline-comment-username" onclick="window.location.hash='#/profile/${encodeURIComponent(c.username)}'">${escapeHTML(c.username)}</span>
@@ -342,7 +342,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             <!-- Comments Preview -->
             <div class="social-card-comments-preview">
-              ${commentsCount > 2 ? `<span class="view-all-comments-btn" onclick="window.location.hash='#/setup/${setup.id}'">View all ${commentsCount} comments</span>` : ''}
+              ${commentsCount > 3 ? `<span class="view-all-comments-btn" onclick="window.location.hash='#/setup/${setup.id}'">View all ${commentsCount} comments</span>` : ''}
               ${commentsPreviewHTML}
             </div>
 
@@ -437,11 +437,11 @@ document.addEventListener('DOMContentLoaded', () => {
             setup.comments.push(newComment);
 
             // Re-render only comment previews under this card
-            const updatedRecentComments = [...setup.comments].sort((a,b) => new Date(a.created_at) - new Date(b.created_at)).slice(-2);
+            const updatedRecentComments = [...setup.comments].sort((a,b) => new Date(a.created_at) - new Date(b.created_at)).slice(-3);
             const updatedCommentsCount = setup.comments.length;
             
             commentsPreviewContainer.innerHTML = `
-              ${updatedCommentsCount > 2 ? `<span class="view-all-comments-btn" onclick="window.location.hash='#/setup/${setup.id}'">View all ${updatedCommentsCount} comments</span>` : ''}
+              ${updatedCommentsCount > 3 ? `<span class="view-all-comments-btn" onclick="window.location.hash='#/setup/${setup.id}'">View all ${updatedCommentsCount} comments</span>` : ''}
               ${updatedRecentComments.map(c => `
                 <div class="inline-comment-item">
                   <span class="inline-comment-username" onclick="window.location.hash='#/profile/${encodeURIComponent(c.username)}'">${escapeHTML(c.username)}</span>
