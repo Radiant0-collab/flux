@@ -421,6 +421,74 @@
       return getProfiles();
     }
 
+    // POST /api/profile/update
+    if (pathname.endsWith('/api/profile/update') && method === 'POST') {
+      const body = JSON.parse(options.body || '{}');
+      const { oldUsername, newUsername } = body;
+      
+      const oldNameNormalized = oldUsername.trim().toLowerCase();
+      const newNameClean = newUsername.trim();
+      const newNameNormalized = newNameClean.toLowerCase();
+
+      // Validate format
+      const usernameRegex = /^[a-zA-Z0-9_-]{3,20}$/;
+      if (!usernameRegex.test(newNameClean)) {
+        const err = new Error("Username must be 3-20 characters long and contain only letters, numbers, underscores, or hyphens.");
+        err.status = 400;
+        throw err;
+      }
+
+      const setups = getSetups();
+
+      // Validate uniqueness if username is actually changing (ignoring case)
+      if (oldNameNormalized !== newNameNormalized) {
+        const profiles = getProfiles();
+        const isProfileTaken = !!profiles[newNameNormalized];
+        const isSetupTaken = setups.some(s => s.username.toLowerCase() === newNameNormalized);
+        if (isProfileTaken || isSetupTaken) {
+          const err = new Error("Username is already taken.");
+          err.status = 400;
+          throw err;
+        }
+      }
+      setups.forEach(setup => {
+        if (setup.username.toLowerCase() === oldNameNormalized) {
+          setup.username = newNameClean;
+        }
+        if (setup.comments) {
+          setup.comments.forEach(comment => {
+            if (comment.username.toLowerCase() === oldNameNormalized) {
+              comment.username = newNameClean;
+            }
+            if (comment.replies) {
+              comment.replies.forEach(reply => {
+                if (reply.username.toLowerCase() === oldNameNormalized) {
+                  reply.username = newNameClean;
+                }
+                const oldMention = `@${oldUsername}`;
+                if (reply.text.includes(oldMention)) {
+                  reply.text = reply.text.replace(new RegExp(oldMention, 'gi'), `@${newNameClean}`);
+                }
+              });
+            }
+          });
+        }
+        if (setup.liked_by) {
+          setup.liked_by = setup.liked_by.map(u => u.toLowerCase() === oldNameNormalized ? newNameClean : u);
+        }
+      });
+      saveSetups(setups);
+
+      const profiles = getProfiles();
+      if (profiles[oldNameNormalized]) {
+        profiles[newNameClean.toLowerCase()] = { ...profiles[oldNameNormalized] };
+        delete profiles[oldNameNormalized];
+        saveProfiles(profiles);
+      }
+
+      return { success: true };
+    }
+
     // GET /api/profile/:username
     const profileMatch = pathname.match(/\/api\/profile\/([^/]+)$/);
     if (profileMatch && method === 'GET') {
@@ -493,73 +561,7 @@
       return { success: true };
     }
 
-    // POST /api/profile/update
-    if (pathname.endsWith('/api/profile/update') && method === 'POST') {
-      const body = JSON.parse(options.body || '{}');
-      const { oldUsername, newUsername } = body;
-      
-      const oldNameNormalized = oldUsername.trim().toLowerCase();
-      const newNameClean = newUsername.trim();
-      const newNameNormalized = newNameClean.toLowerCase();
 
-      // Validate format
-      const usernameRegex = /^[a-zA-Z0-9_-]{3,20}$/;
-      if (!usernameRegex.test(newNameClean)) {
-        const err = new Error("Username must be 3-20 characters long and contain only letters, numbers, underscores, or hyphens.");
-        err.status = 400;
-        throw err;
-      }
-
-      const setups = getSetups();
-
-      // Validate uniqueness if username is actually changing (ignoring case)
-      if (oldNameNormalized !== newNameNormalized) {
-        const profiles = getProfiles();
-        const isProfileTaken = !!profiles[newNameNormalized];
-        const isSetupTaken = setups.some(s => s.username.toLowerCase() === newNameNormalized);
-        if (isProfileTaken || isSetupTaken) {
-          const err = new Error("Username is already taken.");
-          err.status = 400;
-          throw err;
-        }
-      }
-      setups.forEach(setup => {
-        if (setup.username.toLowerCase() === oldNameNormalized) {
-          setup.username = newNameClean;
-        }
-        if (setup.comments) {
-          setup.comments.forEach(comment => {
-            if (comment.username.toLowerCase() === oldNameNormalized) {
-              comment.username = newNameClean;
-            }
-            if (comment.replies) {
-              comment.replies.forEach(reply => {
-                if (reply.username.toLowerCase() === oldNameNormalized) {
-                  reply.username = newNameClean;
-                }
-                const oldMention = `@${oldUsername}`;
-                if (reply.text.includes(oldMention)) {
-                  reply.text = reply.text.replace(new RegExp(oldMention, 'gi'), `@${newNameClean}`);
-                }
-              });
-            }
-          });
-        }
-        if (setup.liked_by) {
-          setup.liked_by = setup.liked_by.map(u => u.toLowerCase() === oldNameNormalized ? newNameClean : u);
-        }
-      });
-      saveSetups(setups);
-
-      const profiles = getProfiles();
-      if (profiles[oldNameNormalized]) {
-        profiles[newNameClean.toLowerCase()] = { ...profiles[oldNameNormalized] };
-        delete profiles[oldNameNormalized];
-        saveProfiles(profiles);
-      }
-
-      return { success: true };
-    }
 
     // GET /api/search/users
     if (pathname.endsWith('/api/search/users') && method === 'GET') {
