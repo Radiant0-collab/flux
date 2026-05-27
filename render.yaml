@@ -4,7 +4,3 @@ services:
     env: node
     buildCommand: npm install
     startCommand: node server.js
-    disk:
-      name: flux-data
-      mountPath: /opt/render/project/src/data
-      sizeGB: 1
