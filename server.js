@@ -8,13 +8,30 @@ const PORT = process.env.PORT || 3000;
 
 // Ensure directories exist
 const dataDir = path.join(__dirname, 'data');
-const uploadsDir = path.join(__dirname, 'public', 'uploads');
+const uploadsDir = path.join(dataDir, 'uploads');
 
 if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir, { recursive: true });
 }
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+// Migrate existing public/uploads files to data/uploads if any
+const oldUploadsDir = path.join(__dirname, 'public', 'uploads');
+if (fs.existsSync(oldUploadsDir)) {
+  try {
+    const files = fs.readdirSync(oldUploadsDir);
+    files.forEach(file => {
+      const srcPath = path.join(oldUploadsDir, file);
+      const destPath = path.join(uploadsDir, file);
+      if (fs.statSync(srcPath).isFile() && !fs.existsSync(destPath)) {
+        fs.copyFileSync(srcPath, destPath);
+      }
+    });
+  } catch (err) {
+    console.error('Failed to migrate old uploads:', err);
+  }
 }
 
 const dbPath = path.join(dataDir, 'setups.json');
@@ -148,6 +165,7 @@ function writeProfiles(data) {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/uploads', express.static(uploadsDir));
 
 // Configure Multer for File Uploads
 const storage = multer.diskStorage({
@@ -751,7 +769,7 @@ app.post('/api/profile/:username/avatar', upload.single('avatar'), (req, res) =>
     if (profiles[key] && profiles[key].avatar_url) {
       const oldUrl = profiles[key].avatar_url;
       if (oldUrl.startsWith('/uploads/')) {
-        const oldFilePath = path.join(__dirname, 'public', oldUrl);
+        const oldFilePath = path.join(uploadsDir, path.basename(oldUrl));
         if (fs.existsSync(oldFilePath)) {
           try {
             fs.unlinkSync(oldFilePath);
@@ -784,7 +802,7 @@ app.post('/api/profile/:username/avatar/remove', (req, res) => {
   if (profiles[key] && profiles[key].avatar_url) {
     const oldUrl = profiles[key].avatar_url;
     if (oldUrl.startsWith('/uploads/')) {
-      const oldFilePath = path.join(__dirname, 'public', oldUrl);
+      const oldFilePath = path.join(uploadsDir, path.basename(oldUrl));
       if (fs.existsSync(oldFilePath)) {
         try {
           fs.unlinkSync(oldFilePath);
@@ -840,7 +858,7 @@ app.post('/api/setups/:id/delete', (req, res) => {
   // Optional: delete image file from server uploads folder to save disk space
   const imageUrl = setups[setupIndex].image_url;
   if (imageUrl.startsWith('/uploads/')) {
-    const filePath = path.join(__dirname, 'public', imageUrl);
+    const filePath = path.join(uploadsDir, path.basename(imageUrl));
     if (fs.existsSync(filePath)) {
       try {
         fs.unlinkSync(filePath);

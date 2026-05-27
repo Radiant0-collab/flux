@@ -1682,7 +1682,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (target.closest('.delete-comment-btn')) {
         const btn = target.closest('.delete-comment-btn');
         const commentId = btn.dataset.commentId;
-        openDeleteCommentConfirmModal(setup.id, commentId, null);
+        openDeleteCommentConfirmModal(setup, commentId, null);
       }
 
       // 7. Click Delete Reply Trigger
@@ -1690,7 +1690,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const btn = target.closest('.delete-reply-btn');
         const commentId = btn.dataset.commentId;
         const replyId = btn.dataset.replyId;
-        openDeleteCommentConfirmModal(setup.id, commentId, replyId);
+        openDeleteCommentConfirmModal(setup, commentId, replyId);
       }
     });
 
@@ -1801,7 +1801,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Delete Comment Confirmation Modal Helper
-  function openDeleteCommentConfirmModal(setupId, commentId, replyId) {
+  function openDeleteCommentConfirmModal(setup, commentId, replyId) {
+    const setupId = setup.id;
     const isReply = replyId !== null;
     const title = isReply ? "Delete Reply" : "Delete Comment";
     const html = `
@@ -1849,7 +1850,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const setupsRes = await fetch(`/api/setups/${setupId}`);
         if (setupsRes.ok) {
           const updatedSetup = await setupsRes.json();
-          // Find the active setup in list or update details
+          setup.comments = updatedSetup.comments; // Update in-memory comments list references
+          
           const commentsList = document.getElementById('comments-list');
           const commentsCount = document.getElementById('comments-count');
           

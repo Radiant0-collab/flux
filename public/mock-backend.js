@@ -211,7 +211,7 @@
       setups[idx].comments = setups[idx].comments || [];
       setups[idx].comments.push(newComment);
       saveSetups(setups);
-      return setups[idx];
+      return newComment;
     }
 
     // POST /api/setups/:id/comments/:commentId/replies
@@ -245,7 +245,7 @@
       comment.replies = comment.replies || [];
       comment.replies.push(newReply);
       saveSetups(setups);
-      return setups[idx];
+      return newReply;
     }
 
     // POST /api/setups/:id/comments/:commentId/edit
